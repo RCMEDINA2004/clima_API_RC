@@ -73,6 +73,12 @@
         .search-box button:hover {
             background: #ee5a5a;
         }
+        .search-box .favorite-btn {
+            background: #4CAF50;
+        }
+        .search-box .favorite-btn:hover {
+            background: #45a049;
+        }
         .content-wrapper {
             display: flex;
             justify-content: flex-start;
@@ -291,6 +297,59 @@
             opacity: 0.8;
         }
 
+        .favorites {
+            margin-top: 30px;
+            width: 100%;
+        }
+
+        .favorites-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .favorites-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .favorite-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .favorite-item .city-name {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .favorite-item .remove-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .favorite-item .remove-btn:hover {
+            background: #ee5a5a;
+        }
+
         .error {
             background: rgba(255, 100, 100, 0.4);
             border-radius: 20px;
@@ -347,17 +406,20 @@
         <div class="search-box">
             <input type="text" id="cityInput" placeholder="Ingresa el nombre de la ciudad...">
             <button onclick="getWeather()">Buscar</button>
+            <button class="favorite-btn" onclick="addToFavorites()">Guardar en favoritos</button>
         </div>
         
         <div class="content-wrapper">
             <div id="weatherDisplay"></div>
         </div>
+        <div id="favoritesDisplay"></div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <script>
         let map;
         let geocodeCache = {};
+        let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
         function initMap(lat, lon) {
             if (map) {
@@ -555,12 +617,48 @@
             }
         }
 
+        function addToFavorites() {
+            const city = document.getElementById('cityInput').value.trim();
+            if (!city) {
+                alert('Por favor ingresa el nombre de una ciudad primero.');
+                return;
+            }
+            if (!favorites.includes(city)) {
+                favorites.push(city);
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+                displayFavorites();
+            } else {
+                alert('Esta ciudad ya está en favoritos.');
+            }
+        }
+
+        function displayFavorites() {
+            const display = document.getElementById('favoritesDisplay');
+            if (favorites.length === 0) {
+                display.innerHTML = '';
+                return;
+            }
+            let favoritesHtml = '<div class="favorites"><h3 class="favorites-title">⭐ Ciudades Favoritas</h3><div class="favorites-list">';
+            favorites.forEach((city, index) => {
+                favoritesHtml += `<div class="favorite-item"><span class="city-name">${city}</span><button class="remove-btn" onclick="removeFavorite(${index})">×</button></div>`;
+            });
+            favoritesHtml += '</div></div>';
+            display.innerHTML = favoritesHtml;
+        }
+
+        function removeFavorite(index) {
+            favorites.splice(index, 1);
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            displayFavorites();
+        }
+
         document.getElementById('cityInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') getWeather();
         });
 
         // Initial load
         getWeather();
+        displayFavorites();
     </script>
 </body>
 </html>
